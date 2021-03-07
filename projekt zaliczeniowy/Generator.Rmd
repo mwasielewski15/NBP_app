@@ -1,0 +1,116 @@
+---
+title: "Raport"
+author: "PiWD"
+date: "`r Sys.time()`"
+output:
+   html_document:
+    self_contained: no
+---
+
+```{r , echo=F, results='asis', cache=TRUE}
+params <- get(load("params"))
+#print(params$kurs1)
+#print(params$kurs2)
+#print(params$daneMapa)
+kable(head(params$dane))
+
+```
+
+# Mapa
+
+```{r , echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
+library(googleVis)
+ mapka<- gvisGeoChart(inputmap(), locationvar="Country", hovervar="Currency",
+                 options=list(
+                   width=750, 
+                   height=450))
+                                  
+print(mapka,"chart")
+
+```
+# Szereg
+
+```{r , echo=F, results='asis'}
+library(ggplot2)
+    plot.data <- melt(inputdata(), id.vars = "data")
+    plot.data$waluty <- substr(plot.data$variable, nchar(as.vector(plot.data$variable)) - 3 + 1, nchar(as.vector(plot.data$variable)))
+    plot.data <- plot.data[plot.data$waluty %in% c(input$choice1,input$choice2),]
+   plot.data$data <- as.Date(plot.data$data)
+   szereg <- ggplot(plot.data) +
+      geom_line(mapping = aes(x = data, y = value,
+                               colour = waluty,group = waluty), size=0.2)+
+    scale_x_date(date_labels = "%B")+
+      ylab("Kurs")+
+      xlab("Data")
+plot(szereg)
+
+```
+# Scatter plot
+
+```{r , echo=F, results='asis'}
+
+plot.data <- melt(inputdata(), id.vars = "data")
+    plot.data$Waluty <- substr(plot.data$variable, nchar(as.vector(plot.data$variable)) - 3 + 1, nchar(as.vector(plot.data$variable)))
+    plot.data <- dcast(plot.data,data~Waluty)
+scatter <- ggplot(plot.data) +
+      geom_point(mapping = aes(x = plot.data[,input$choice1], y = plot.data[,input$choice2], colour = "orange", size=0.1))+
+      xlab("kurs1")+
+      ylab("kurs2")
+plot(scatter)
+
+```
+# Histogram różnic
+
+```{r , echo=F, results='asis'}
+
+plot.data <- melt(inputdata(), id.vars = "data")
+    plot.data$Waluty <- substr(plot.data$variable, nchar(as.vector(plot.data$variable)) - 3 + 1, nchar(as.vector(plot.data$variable)))
+    plot.data <- plot.data[plot.data$Waluty %in% c(input$choice1,input$choice2), ]
+    plot.data1 <- plot.data[plot.data$Waluty %in% input$choice1, ]
+    plot.data2 <- plot.data[plot.data$Waluty %in% input$choice2, ]
+    plot.data$roznica<-plot.data1$value-plot.data2$value
+histogram <- ggplot(plot.data) +
+      geom_histogram(aes(x = roznica),col="red", size=0.3)+
+      xlab("Roznica kursow")+
+      ylab("Czestosci")
+plot(histogram)
+
+```
+# Regresja
+
+```{r , echo=F, results='asis'}
+
+plot.data <- melt(inputdata(), id.vars = "data")
+    plot.data$Waluty <- substr(plot.data$variable, nchar(as.vector(plot.data$variable)) - 3 + 1, nchar(as.vector(plot.data$variable)))
+    plot.data <- dcast(plot.data, data~Waluty)
+    regresja <- lm(plot.data[,input$choice1]~plot.data[,input$choice2])
+    names(regresja$coefficients) <- c("Intercept", input$choice2)
+    summary(regresja)
+```
+
+```{r , echo=F, results='asis'}
+
+ plot.data <- melt(inputdata(), id.vars = "data")
+    plot.data$Waluty <- substr(plot.data$variable, nchar(as.vector(plot.data$variable)) - 3 + 1, nchar(as.vector(plot.data$variable)))
+    plot.data <- dcast(plot.data, data~Waluty)
+    regresja <- lm(plot.data[,input$choice1]~plot.data[,input$choice2])
+    raintest(regresja)
+
+```
+
+```{r , echo=F, results='asis'}
+
+plot.data <- melt(inputdata(), id.vars = "data")
+    plot.data$Waluty <- substr(plot.data$variable, nchar(as.vector(plot.data$variable)) - 3 + 1, nchar(as.vector(plot.data$variable)))
+    plot.data <- dcast(plot.data, data~Waluty)
+    wykres <- ggplot(plot.data, aes(x = plot.data[, input$choice2], y = plot.data[, input$choice1])) +
+      geom_point(colour="green") +
+      stat_smooth(method = "lm", colour="red")+
+      ylab(input$choice1) +
+      xlab(input$choice2)
+    print(wykres)
+
+```
+
+
+

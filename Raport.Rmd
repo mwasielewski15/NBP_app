@@ -1,0 +1,49 @@
+---
+title: "Raport"
+author: "PiWD"
+date: "`r Sys.time()`"
+output:
+   html_document:
+    self_contained: no
+---
+
+```{r , echo=T, results='asis', cache=TRUE}
+params <- get(load("params"))
+print(params$kurs1)
+print(params$kurs2)
+print(params$daneMapa)
+print(head(params$dane))
+
+```
+
+# googleVis 
+
+```{r , echo=FALSE, results='asis', cache=TRUE, warning=FALSE, message=FALSE}
+library(googleVis)
+ii <- gvisGeoChart(params$daneMapa, locationvar="country",
+                     options=list(projection="kavrayskiy-vii",
+                                  width=600,
+                                  height=400))
+print(ii,"chart")
+
+```
+# ggplot2
+
+```{r , echo=T, results='asis'}
+library(ggplot2)
+img <- (
+    ggplot(params$dane)
+    + geom_line(aes(x=as.POSIXct(params$dane$data) , y=params$dane[,grep(params$kurs1,colnames(params$dane))]), colour="green")
+    + geom_line(aes(x=as.POSIXct(params$dane$data) , y=params$dane[,grep(params$kurs2,colnames(params$dane))]), colour="orange")
+    + xlab("Data") + ylab("Kurs")
+    + ggtitle("Szeregi czasowe kursow")
+    + theme_minimal()
+)
+plot(img)
+
+```
+
+Dalej analogicznie 
+
+
+
